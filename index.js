@@ -1,7 +1,7 @@
 const tOp = require('./Lib/text');
 const { env } = require('./env');
 const { cs } = tOp; const rs = [];
-
+const { drawGrid } = require('./Lib/colors');
 
 rs.push({ name: 'Parser', project: 'cfw', fileNames: ['parser.js'], func: () => require('./jsCode/tracer/cParser').goParser() });
 rs.push({ name: 'CodeTestMode', fileNames: ['package.json'], func: () => require('./jsCode/mainLoop').markProject(true) });
@@ -16,4 +16,10 @@ for (let i = 0; i < rs.length; i += 1) {
   success &= (!rule.fileNames) || (rule.fileNames && (rule.fileNames.includes(env.file) || (rule.fileNames.includes(env.fileShort))));
   success &= (!rule.ext) || (rule.ext && rule.ext.includes(env.ext));
   if (success) { rule.func(); break; }
+}
+
+const tstFunc = () => drawGrid();
+
+module.exports = {
+  tstFunc,
 }
