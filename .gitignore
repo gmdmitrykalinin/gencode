@@ -1,0 +1,10 @@
+log
+node_modules
+graphQL/services
+.idea/
+*.log
+.npm
+.eslintcache
+.node_repl_history
+.yarn-integrity
+*.swp

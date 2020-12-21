@@ -1,0 +1,27 @@
+type Validation {
+    id: ObjID!
+    text: String
+    nerMappings: [ValidMap]
+    createdAt: DateTime
+    updatedAt: DateTime
+}
+
+type ValidMap {
+    word: String
+    category: String
+    start: Int
+    end: Int
+}
+
+extend type Mutation {
+    addValidation(text: String): Validation
+    updateValidation(id: ObjID!, text: String): Validation
+    removeValidation(id: ObjID!): Validation
+    addValidMap(id: ObjID!, start: Int!, end: Int!, category: String!): Boolean
+}
+
+extend type Query {
+    validation(id: ObjID!): Validation
+    validations(skip: Int = 0, limit: Int = 0): [Validation]
+    validationsCount(skip: Int = 0, limit: Int = 0): Int
+}

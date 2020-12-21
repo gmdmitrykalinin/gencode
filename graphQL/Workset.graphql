@@ -1,0 +1,328 @@
+# _workset
+
+type Workset {
+    id: ObjID!
+    businessJustification: String
+    FRRReference: String
+    schedule: String
+    tags: [String]
+    rules: [Rule]
+    owner: String
+    lastUpdater: String
+    tasks: [String]
+    worksetStatus: WorksetStatusEnum
+    mockMode: Boolean
+    # see [200120183000]
+    integralStatus: String
+    typeOfTest: TypeOfTestEnum
+    isNegative: Boolean
+    lastActivityTime: DateTime
+    createdAt: DateTime
+    updatedAt: DateTime
+    testId: String
+    lastTaskStatuses: [TaskStatus]
+    lastBatchWorks: [Work]
+    validationRuleSets: [ValidationRuleSet]
+}
+enum TypeOfTestEnum {
+    frontend
+    backend
+}
+enum WorksetStatusEnum {
+    created
+    running
+    stopped
+    done
+}
+
+enum PlatformEnum { linux windows }
+
+type SourceHost {
+    ip: String
+    mask: Int
+    domainName: String
+}
+
+type TargetHost {
+    ip: String
+    mask: Int
+    ports: [String]
+    domainName: String
+}
+
+type TargetHostB {
+    ip: String
+    mask: Int
+}
+
+type Rule {
+    id: ObjID!
+    protocols: [String!]!
+    sourceHost: SourceHost
+    targetHost: TargetHost
+    sshauth: SSHAuth
+    # see [200120183000]
+    integralStatus: String
+    platform: PlatformEnum
+}
+
+input TargetHostInput {
+    ip: String
+    mask: Int
+    ports: [String]
+}
+
+input SourceHostInput {
+    ip: String
+    mask: Int
+}
+
+
+type IpPair {
+    sourceIP: String!
+    targetIP: String!
+    # see-[200120183300]
+    lastTestStatus: String
+}
+
+type RuleUnits {
+    businessJustification: String
+    FRRReference: String
+    tags: [String]
+    schedule: String
+    protocols: [String]
+    ports: [String]
+    tasks: [String]
+    sourceHost: SourceHost
+    targetHost: TargetHost
+    segmentElementsCount: Int
+    segmentElements: [IpPair]
+    debugInfo: DebugInfo
+}
+
+input RuleUnitsFilterInput {
+    findString: String
+    # see-[200120183300]
+    lastTestStatuses: [String]
+}
+
+# --- ---
+
+type MetaFind {
+    isChecked: Boolean
+    count: Int
+}
+
+type ProtocolsFind {
+    value: ProtocolEnum!
+    metaFind: MetaFind
+}
+
+type PortsFind {
+    value: String!
+    metaFind: MetaFind
+}
+
+type StringsFind {
+    value: String!
+    metaFind: MetaFind
+}
+
+type IdAndName {
+    id: String
+    name: String
+}
+
+type IdAndNameFind {
+    value: IdAndName
+    metaFind: MetaFind
+}
+
+type TimeRangeFacet {
+    count: Int
+    range: String
+}
+
+input TimeRangeInput {
+    start: DateTime,
+    end: DateTime,
+}
+
+# [[200130162400]]
+input WorksetsFilterInput {
+    businessJustification: [String!]
+    FRRReference: [String!]
+    tags: [String!]
+    bjOrTag: String
+
+    ip: String
+    sourceIP: String
+    targetIP: String
+
+    ipAndMask: String
+    ipAndMaskSource: String
+    ipAndMaskTarget: String
+
+    sourceIPMask: Int
+    targetIPMask: Int
+    mask: Int
+
+    domainNames: [String!]
+
+    protocols: [ProtocolEnum!]
+    ports: [String!]
+    tasks: [String!]
+
+    # user ids
+    userCreators: [String!]
+    # user ids
+    userLastUpdaters: [String!]
+    # user ids
+    users: [String!]
+
+    findString: String
+
+    typeOfTest: TypeOfTestEnum = backend
+    lastActivityTime: TimeRangeInput
+}
+
+type TaskStatus { task: String status: String }
+
+type FindParams {
+    findString: String
+    businessJustifications: [StringsFind!]
+    FRRReferences: [StringsFind!]
+    protocols: [ProtocolsFind!]
+    ports: [PortsFind!]
+    tags: [StringsFind!]
+    tasks: [StringsFind!]
+    luisResult: String
+    userCreators: [IdAndNameFind!]
+    userLastUpdaters: [IdAndNameFind!]
+    users: [IdAndNameFind!]
+    domainNames: [StringsFind!]
+    lastActivityTime: [TimeRangeFacet]
+}
+
+type DebugInfo {
+    statusesGetDuration: Int
+}
+
+type WorksetsPlus {
+    worksetCollection: [Workset]
+    worksetsCount: Int!
+    findParams: FindParams
+}
+
+input RuleInput {
+    id: ObjID
+    protocols: [String]
+    sourceHost: SourceHostInput
+    targetHost: TargetHostInput
+    sshauth: ObjID
+    platform: PlatformEnum
+}
+
+input WorksetInput {
+    businessJustification: String
+    FRRReference: String
+    # cron string
+    schedule: String
+    tags: [String]
+    tasks: [String]
+    rules: [RuleInput]
+    mockMode: Boolean
+    typeOfTest: TypeOfTestEnum
+    isNegative: Boolean
+    validationRuleSets: [ObjID]
+}
+
+# --- ---
+
+type WorkSetResultStats {
+    total: Int
+    passed: Int
+    failed: Int
+    items: [WorkSetResultStatsItem]
+}
+
+type WorkSetResultStatsItem {
+    time: DateTime
+    passed: Int
+    failed: Int
+}
+
+input WorkSetResultStatsFilter {
+    worksetId: ObjID
+    rule: ID
+    task: [String]
+    sourceIP: String
+    targetIP: String
+    protocol: [String]
+    workStatus: [String]
+}
+
+type WorkSetRunStats {
+    total: Int
+    scheduled: Int
+    completed: Int
+    items: [WorkSetRunStatsItem]
+}
+
+type WorkSetRunStatsItem {
+    time: DateTime
+    scheduled: Int
+    completed: Int
+}
+
+enum WorksetsRunStatsGroupBy {
+    batch
+    workset
+}
+
+extend type Query {
+    # graphql-[[191128122800]], resolver [191128123947], realise [200228144400]
+    worksets(skip: Int = 0, limit: Int = 100, filter: WorksetsFilterInput = {}, sort: String): WorksetsPlus
+    workset(id: ObjID): Workset
+    worksetCount: Int
+    worksetUniqIpCount: Int
+    # resolver [200203144300]; realise [200229172000]
+    ruleUnits(skip: Int = 0, limit: Int = 100, ruleId: String!, filter: RuleUnitsFilterInput): RuleUnits
+
+    # realise [200302162800], resolver [200302162500]
+    ruleStatistics(ruleId: String!): StartDateTimesStatistic
+
+    worksetsResultStats(start: DateTime! end: DateTime! interval: String): WorkSetResultStats
+    worksetsRunStats(
+        start: DateTime!
+        end: DateTime!
+        interval: String
+        groupBy: WorksetsRunStatsGroupBy = workset
+    ): WorkSetRunStats
+}
+
+extend type Mutation {
+    # graphql-[[191128110400]], resolver [191128104752]
+    createWorkset(input: WorksetInput!):Workset
+
+    copyWorkset(id: ObjID!, n: Int = 1): Int
+
+    updateWorkset(id: String!, input: WorksetInput!):Workset
+
+    # graphql-[[191217160600]]
+    deleteWorkset(id: String!): Int
+
+    deleteWorksetAll(NameContains: String = ""): Int
+
+    # graphql-[[191228164400]]
+    runWorkset(id: String!): Boolean
+
+    runWorksetAll(NameContains: String = ""): Int
+
+    stopWorkset(id: String!): Boolean
+
+    stopWorksetAll(NameContains: String = ""): Int
+
+    debug(data: String!, data2: String): String
+
+}
